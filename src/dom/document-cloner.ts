@@ -1,4 +1,4 @@
-import {Bounds} from '../css/layout/bounds';
+import { Bounds } from '../css/layout/bounds';
 import {
     isBodyElement,
     isCanvasElement,
@@ -16,14 +16,15 @@ import {
     isTextNode,
     isVideoElement
 } from './node-parser';
-import {isIdentToken, nonFunctionArgSeparator} from '../css/syntax/parser';
-import {TokenType} from '../css/syntax/tokenizer';
-import {CounterState, createCounterText} from '../css/types/functions/counter';
-import {LIST_STYLE_TYPE, listStyleType} from '../css/property-descriptors/list-style-type';
-import {CSSParsedCounterDeclaration, CSSParsedPseudoDeclaration} from '../css/index';
-import {getQuote} from '../css/property-descriptors/quotes';
-import {Context} from '../core/context';
-import {DebuggerType, isDebugging} from '../core/debugger';
+import { isIdentToken, nonFunctionArgSeparator } from '../css/syntax/parser';
+import { TokenType } from '../css/syntax/tokenizer';
+import { CounterState, createCounterText } from '../css/types/functions/counter';
+import { LIST_STYLE_TYPE, listStyleType } from '../css/property-descriptors/list-style-type';
+import { CSSParsedCounterDeclaration, CSSParsedPseudoDeclaration } from '../css/index';
+import { getQuote } from '../css/property-descriptors/quotes';
+import { Context } from '../core/context';
+import { DebuggerType, isDebugging } from '../core/debugger';
+import { isInlineImage } from '../core/cache-storage';
 
 export interface CloneOptions {
     ignoreElements?: (element: Element) => boolean;
@@ -159,6 +160,10 @@ export class DocumentCloner {
                 clone.src = node.currentSrc;
                 clone.srcset = '';
             }
+
+            image2base64(clone.src).then((base64: string) => {
+                clone.src = base64;
+            })
 
             if (clone.loading === 'lazy') {
                 clone.loading = 'eager';
@@ -635,3 +640,29 @@ const createStyles = (body: HTMLElement, styles: string) => {
         body.appendChild(style);
     }
 };
+
+const getBase64Image = (img: HTMLImageElement): string => {
+    const canvas = document.createElement("canvas");
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext("2d");
+    ctx!.drawImage(img, 0, 0, img.width, img.height);
+    var dataURL = canvas.toDataURL("image/png");  // 可选其他值 image/jpeg
+    return dataURL;
+}
+var image2base64 = function (src: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+        if (isInlineImage(src)) {
+            resolve(src)
+            return
+        }
+        var image = new Image();
+        image.crossOrigin = "*";  // 必须在image之前赋值
+        image.src = src + '?v=' + Math.random(); // 处理缓存
+        image.onload = function () {
+            var base64 = getBase64Image(image);
+            resolve(base64)
+        }
+        image.onerror = reject;
+    })
+}

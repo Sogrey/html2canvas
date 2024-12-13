@@ -1,5 +1,5 @@
-import {FEATURES} from './features';
-import {Context} from './context';
+import { FEATURES } from './features';
+import { Context } from './context';
 
 export class CacheStorage {
     private static _link?: HTMLAnchorElement;
@@ -35,9 +35,9 @@ export interface ResourceOptions {
 
 export class Cache {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private readonly _cache: {[key: string]: Promise<any>} = {};
+    private readonly _cache: { [key: string]: Promise<any> } = {};
 
-    constructor(private readonly context: Context, private readonly _options: ResourceOptions) {}
+    constructor(private readonly context: Context, private readonly _options: ResourceOptions) { }
 
     addImage(src: string): Promise<void> {
         const result = Promise.resolve();
@@ -175,3 +175,5 @@ const isInlineBase64Image = (src: string): boolean => INLINE_BASE64.test(src);
 const isBlobImage = (src: string): boolean => src.substr(0, 4) === 'blob';
 
 const isSVG = (src: string): boolean => src.substr(-3).toLowerCase() === 'svg' || INLINE_SVG.test(src);
+
+export { isRenderable, isInlineImage, isInlineBase64Image, isBlobImage, isSVG }
